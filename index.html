@@ -1,0 +1,738 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HKU Battle of Faculties — Team Tracker</title>
+
+  <!-- Tailwind CSS (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind config for fonts and colors
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
+          },
+          colors: {
+            brand: {
+              dark: '#0D2F27',   // deep dark-green background
+              mid: '#105343',    // mid green
+              light: '#18A57B',  // accent green
+              soft: '#9BE4C7',   // soft mint
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Inter font (optional; loads fast) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-1: #0b2a23;
+      --bg-2: #0f3d31;
+      --card-bg: rgba(255,255,255,0.08);
+      --card-stroke: rgba(255,255,255,0.12);
+      --text: #e7f6ef;
+      --muted: #bfe7d6;
+      --accent: #18A57B;
+      --accent-2: #9BE4C7;
+      --shadow-1: 12px 12px 24px rgba(0,0,0,0.35), -12px -12px 24px rgba(255,255,255,0.02);
+      --shadow-2: 8px 8px 16px rgba(0,0,0,0.35), -8px -8px 16px rgba(255,255,255,0.03);
+      --ring: rgba(24,165,123,0.35);
+    }
+    [data-theme="light"] {
+      --bg-1: #dff7ef;
+      --bg-2: #c3efdf;
+      --card-bg: rgba(255,255,255,0.7);
+      --card-stroke: rgba(0,0,0,0.08);
+      --text: #0d2f27;
+      --muted: #23584a;
+      --accent: #0f6f58;
+      --accent-2: #105343;
+      --ring: rgba(16,83,67,0.35);
+    }
+
+    /* Background gradient + subtle animated layers */
+    body {
+      background: radial-gradient(1200px 800px at 10% 10%, rgba(24,165,123,0.08), transparent 60%),
+                  radial-gradient(1000px 600px at 90% 30%, rgba(155,228,199,0.06), transparent 60%),
+                  linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      min-height: 100dvh;
+      color: var(--text);
+      font-feature-settings: "cv02","cv03","cv04","cv11";
+    }
+
+    /* Soft glass-neumorphic card */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      border: 1px solid var(--card-stroke);
+      border-radius: 1rem;
+      box-shadow: var(--shadow-1);
+    }
+    .glass:hover {
+      box-shadow: var(--shadow-2);
+      transition: box-shadow .25s ease;
+    }
+
+    /* Buttons */
+    .btn {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      border: 1px solid var(--card-stroke);
+      color: var(--text);
+      border-radius: .75rem;
+      padding: .5rem .875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      transition: transform .12s ease, box-shadow .2s ease, background-color .3s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, rgba(24,165,123,0.5), rgba(24,165,123,0.25));
+      border-color: rgba(24,165,123,0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--card-stroke);
+    }
+
+    /* Inputs */
+    .field {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      border: 1px solid var(--card-stroke);
+      border-radius: .75rem;
+      color: var(--text);
+      padding: .5rem .75rem;
+      outline: none;
+      transition: box-shadow .2s ease, border-color .2s ease;
+    }
+    .field:focus {
+      box-shadow: 0 0 0 6px var(--ring);
+      border-color: rgba(24,165,123,0.85);
+    }
+
+    .stepper {
+      display: inline-flex; align-items: center; gap: .25rem;
+    }
+    .stepper button {
+      width: 2rem; height: 2rem; display: inline-grid; place-items: center;
+      border-radius: .65rem; border: 1px solid var(--card-stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.02));
+      color: var(--text); cursor: pointer;
+      transition: transform .12s ease, box-shadow .2s ease;
+    }
+    .stepper button:hover { transform: translateY(-1px); }
+    .stepper input[type="number"] {
+      width: 5rem; text-align: center;
+    }
+
+    /* Satisfaction slider + bar */
+    .sat-bar {
+      height: .5rem;
+      border-radius: .5rem;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981, #22c55e);
+      opacity: .85;
+      position: relative;
+    }
+    .sat-bar::after {
+      /* dynamic via JS width; fallback at 70% */
+      content: "";
+      position: absolute; left: 0; top: 0; bottom: 0; width: 70%;
+      border-radius: .5rem;
+      background: linear-gradient(90deg, rgba(255,255,255,.35), rgba(255,255,255,.0));
+      mix-blend-mode: screen; pointer-events: none;
+    }
+
+    /* Reputation circular indicator */
+    .rep-ring {
+      --size: 170px;
+      width: var(--size); height: var(--size);
+      border-radius: 50%;
+      position: relative;
+      background: conic-gradient(var(--accent) 0deg, var(--accent-2) 120deg, rgba(255,255,255,0.1) 120deg);
+      box-shadow: var(--shadow-2);
+      display: grid; place-items: center;
+    }
+    .rep-ring::before {
+      content: "";
+      position: absolute; inset: 10px;
+      background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(255,255,255,.06));
+      backdrop-filter: blur(6px) saturate(120%);
+      -webkit-backdrop-filter: blur(6px) saturate(120%);
+      border-radius: 50%;
+      border: 1px solid var(--card-stroke);
+    }
+
+    /* Floating particle lights (pure CSS) */
+    .floaters {
+      position:absolute; inset:0; overflow:hidden; pointer-events:none;
+    }
+    .blob {
+      position:absolute; width: 20rem; height: 20rem; border-radius: 50%;
+      filter: blur(50px); opacity: .18; transform: translate(-50%,-50%);
+      animation: drift 24s ease-in-out infinite alternate;
+      background: radial-gradient(circle at 30% 30%, rgba(155,228,199,.7), rgba(24,165,123,.0) 60%);
+    }
+    .blob:nth-child(2) { left: 85%; top: 30%; animation-delay: -7s; width: 26rem; height: 26rem; }
+    .blob:nth-child(3) { left: 40%; top: 85%; animation-delay: -13s; width: 22rem; height: 22rem; }
+    @keyframes drift {
+      0% { transform: translate(-50%,-50%) scale(1); }
+      100% { transform: translate(-46%,-54%) scale(1.2); }
+    }
+
+    /* Focus visible */
+    :focus-visible { outline: none; box-shadow: 0 0 0 6px var(--ring) !important; }
+
+    /* Table mode styles */
+    .table-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr .8fr .8fr;
+      gap: .75rem;
+      align-items: center;
+    }
+
+    /* Footer fixed space padding for logo area */
+    .has-logo-pad { padding-bottom: 7.5rem; }
+
+    /* Bottom-right logo area */
+    .logo-slot {
+      position: fixed;
+      right: 1rem; bottom: 3.5rem;
+      width: 14rem; height: 7rem;
+      border-radius: 1rem;
+      border: 1px dashed rgba(255,255,255,0.35);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: grid; place-items: center;
+      color: var(--muted);
+      text-align: center;
+      box-shadow: var(--shadow-2);
+    }
+
+    /* Small helper badge */
+    .badge {
+      background: rgba(24,165,123,.15);
+      color: var(--text);
+      border: 1px solid rgba(24,165,123,.45);
+      border-radius: 999px;
+      padding: .25rem .5rem;
+      font-size: .75rem;
+      letter-spacing: .02em;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 640px) {
+      .rep-ring { --size: 140px; }
+    }
+  </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body class="font-sans has-logo-pad" data-theme="dark">
+  <!-- Subtle animated floaters -->
+  <div class="floaters" aria-hidden="true">
+    <div class="blob" style="left:15%; top:20%"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-gradient-to-b from-black/20 to-transparent border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="glass w-10 h-10 rounded-xl grid place-items-center" aria-hidden="true">
+          <!-- Simple inline SVG logo-like mark -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 12c0-4.418 3.582-8 8-8a8 8 0 1 1-8 8z" stroke="currentColor" stroke-opacity=".9" stroke-width="1.5"></path>
+            <path d="M7 13c0-2.761 2.239-5 5-5" stroke="currentColor" stroke-width="1.5"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">HKU Battle of Faculties — Team Tracker</h1>
+          <p class="text-sm text-white/70">Track Students, Satisfaction, and compute the overall Reputation.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="toggleViewBtn" class="btn btn-ghost" aria-pressed="false" title="Toggle Card/Table view">
+          <span class="inline-block w-4 h-4" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 4h8v6H3V4zm0 10h8v6H3v-6zm10-10h8v6h-8V4zm0 10h8v6h-8v-6z" stroke="currentColor" stroke-width="1.5"></path></svg>
+          </span>
+          <span class="hidden sm:inline">View</span>
+        </button>
+        <button id="toggleThemeBtn" class="btn btn-ghost" aria-pressed="true" title="Toggle Theme">
+          <span class="inline-block w-4 h-4 theme-icon" aria-hidden="true">
+            <!-- Moon -->
+            <svg class="moon" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="1.5"></path></svg>
+          </span>
+          <span class="hidden sm:inline">Theme</span>
+        </button>
+        <button id="exportBtn" class="btn btn-ghost" title="Copy state to clipboard">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 17h8M8 13h8M8 9h8M4 7a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" stroke-width="1.5"></path></svg>
+          <span class="hidden sm:inline">Export</span>
+        </button>
+        <button id="importBtn" class="btn btn-ghost" title="Import state from JSON">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" stroke-width="1.5"></path></svg>
+          <span class="hidden sm:inline">Import</span>
+        </button>
+        <button id="addTeamBtn" class="btn btn-primary" title="Add a new team">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="1.5"></path></svg>
+          <span class="hidden sm:inline">Add Team</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Top KPI & Controls -->
+  <section class="max-w-7xl mx-auto px-4 mt-6 grid gap-6 md:grid-cols-2">
+    <!-- Reputation card -->
+    <div class="glass p-4 md:p-6">
+      <div class="flex items-center justify-between">
+        <div class="space-y-1">
+          <p class="text-sm text-white/70">Overall</p>
+          <h2 class="text-2xl font-bold tracking-tight">HKU Reputation</h2>
+          <div id="demandHint" class="badge mt-2">Demand: —</div>
+        </div>
+        <div class="rep-ring" aria-live="polite" aria-label="Overall Reputation indicator">
+          <div class="relative z-10 text-center">
+            <div id="repValue" class="text-4xl font-extrabold">7</div>
+            <div class="text-xs opacity-75">rounded average</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 text-sm text-white/80">
+        Reputation is the rounded average of all faculties’ Satisfaction. It updates instantly as you edit values.
+      </div>
+    </div>
+
+    <!-- Quick actions / sorting -->
+    <div class="glass p-4 md:p-6">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm text-white/70">Sort by</span>
+        <button id="sortByName" class="btn btn-ghost">Name</button>
+        <button id="sortByStudents" class="btn btn-ghost">Students</button>
+        <button id="sortBySat" class="btn btn-ghost">Satisfaction</button>
+
+        <div class="ml-auto flex items-center gap-2">
+          <button id="resetAllBtn" class="btn btn-ghost" title="Reset all to 10 Students, 7 Satisfaction">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-9-9v3l4-4-4-4v3" stroke="currentColor" stroke-width="1.5"></path></svg>
+            Reset All
+          </button>
+          <button id="fillTenBtn" class="btn btn-ghost" title="Ensure we have 10 default faculties">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="1.5"></path></svg>
+            Load 10 Faculties
+          </button>
+        </div>
+      </div>
+      <div class="mt-3 text-sm text-white/75">
+        Tip: Use arrows on numeric fields, or click +/- buttons. Satisfaction ranges from 0 to 10.
+      </div>
+    </div>
+  </section>
+
+  <!-- Teams -->
+  <main class="max-w-7xl mx-auto px-4 mt-6">
+    <!-- Table header (only visible in table mode) -->
+    <div id="tableHeader" class="hidden glass p-3 mb-3">
+      <div class="table-grid font-semibold text-sm">
+        <div>Faculty</div>
+        <div class="text-center">Students</div>
+        <div class="text-center">Satisfaction</div>
+        <div class="text-center">Sat. Bar</div>
+        <div class="text-center">Actions</div>
+      </div>
+    </div>
+
+    <div id="teamsContainer" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <!-- Dynamic team cards injected here -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-10 border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-white/80">
+      <div class="text-center md:text-left">
+        MEDD 8860 Emerging Technologies in STEM Education
+      </div>
+      <div class="text-sm text-white/60">
+        Made for facilitation of HKU Battle of Faculties — System Tracker
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bottom-right logo slot -->
+  <aside class="logo-slot" aria-label="Logo area (place your logo here)">
+    <div>
+      <div class="text-xs uppercase tracking-wider opacity-80">Logo Area</div>
+      <div class="text-[0.7rem] opacity-70">Bottom-right reserved</div>
+    </div>
+  </aside>
+
+  <script>
+    // ---------- Utilities ----------
+    const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+    const safeParseInt = (v, fallback = 0) => {
+      const n = parseInt(String(v), 10);
+      return Number.isFinite(n) ? n : fallback;
+    };
+
+    // ---------- State ----------
+    let viewMode = 'cards'; // 'cards' | 'table'
+    let teams = [];
+
+    const DEFAULT_TEAMS = [
+      { name: 'Architecture', students: 10, sat: 7 },
+      { name: 'Arts', students: 10, sat: 7 },
+      { name: 'Business & Econ', students: 10, sat: 7 },
+      { name: 'Dentistry', students: 10, sat: 7 },
+      { name: 'Education', students: 10, sat: 7 },
+      { name: 'Engineering', students: 10, sat: 7 },
+      { name: 'Law', students: 10, sat: 7 },
+      { name: 'Medicine', students: 10, sat: 7 },
+      { name: 'Science', students: 10, sat: 7 },
+      { name: 'Social Sciences', students: 10, sat: 7 },
+    ];
+
+    // ---------- DOM refs ----------
+    const $ = sel => document.querySelector(sel);
+    const teamsContainer = $('#teamsContainer');
+    const repValueEl = $('#repValue');
+    const demandHintEl = $('#demandHint');
+    const tableHeader = $('#tableHeader');
+
+    // ---------- Theme handling (safe) ----------
+    const root = document.documentElement;
+    const bodyEl = document.body;
+    const toggleThemeBtn = $('#toggleThemeBtn');
+
+    function getStoredTheme() {
+      try {
+        if (!('localStorage' in window)) return null;
+        return localStorage.getItem('hku-theme');
+      } catch (e) { return null; }
+    }
+    function storeTheme(val) {
+      try {
+        if (!('localStorage' in window)) return;
+        localStorage.setItem('hku-theme', val);
+      } catch (e) { /* ignore */ }
+    }
+    function setTheme(mode) {
+      bodyEl.setAttribute('data-theme', mode);
+      toggleThemeBtn.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
+      storeTheme(mode);
+    }
+    (function initTheme() {
+      const stored = getStoredTheme();
+      if (stored) {
+        setTheme(stored);
+      } else {
+        // Default to dark
+        setTheme('dark');
+      }
+    })();
+
+    toggleThemeBtn.addEventListener('click', () => {
+      const current = bodyEl.getAttribute('data-theme') || 'dark';
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // ---------- Rendering ----------
+    function computeReputation() {
+      if (teams.length === 0) return 0;
+      const avg = teams.reduce((acc, t) => acc + t.sat, 0) / teams.length;
+      const rep = Math.round(avg);
+      return clamp(rep, 0, 10);
+    }
+
+    function updateReputationUI() {
+      const rep = computeReputation();
+      repValueEl.textContent = rep;
+
+      // Update demand hint and ring gradient
+      if (rep >= 8) {
+        demandHintEl.textContent = 'Demand: +1 Student';
+      } else if (rep <= 6) {
+        demandHintEl.textContent = 'Demand: -1 Student';
+      } else {
+        demandHintEl.textContent = 'Demand: —';
+      }
+
+      // Update ring conic gradient dynamically based on rep
+      const deg = (rep / 10) * 360;
+      const ring = document.querySelector('.rep-ring');
+      ring.style.background = `conic-gradient(var(--accent) 0deg, var(--accent-2) ${deg}deg, rgba(255,255,255,0.1) ${deg}deg)`;
+    }
+
+    function createTeamCard(t, idx) {
+      // Card mode
+      const card = document.createElement('article');
+      card.className = 'glass p-4 md:p-5';
+      card.setAttribute('data-index', idx);
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="badge" aria-hidden="true">Team</span>
+            <input aria-label="Faculty name" class="field font-semibold" value="${t.name}" />
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-ghost btn-dup" title="Duplicate team" aria-label="Duplicate team">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 8h10v10H8z"/><path d="M6 6h10v10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-del" title="Remove team" aria-label="Remove team">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m3 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M4 7h16" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 grid gap-4">
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="">
+              <label class="text-sm text-white/70">Students</label>
+              <div class="mt-2 stepper">
+                <button class="dec-stu" aria-label="Decrease students">−</button>
+                <input class="field stu-inp" aria-label="Students number" type="number" inputmode="numeric" min="0" max="999" value="${t.students}" />
+                <button class="inc-stu" aria-label="Increase students">+</button>
+              </div>
+            </div>
+
+            <div class="">
+              <label class="text-sm text-white/70">Satisfaction (0–10)</label>
+              <div class="mt-2 flex items-center gap-3">
+                <button class="dec-sat" aria-label="Decrease satisfaction">−</button>
+                <input class="field sat-inp w-full" aria-label="Satisfaction score" type="number" inputmode="numeric" min="0" max="10" value="${t.sat}" />
+                <button class="inc-sat" aria-label="Increase satisfaction">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sat-bar" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${t.sat}">
+              <div class="h-full rounded-md bg-white/40" style="width:${(t.sat/10)*100}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    function createTeamRow(t, idx) {
+      // Table mode row
+      const row = document.createElement('div');
+      row.className = 'glass p-3 table-grid';
+      row.setAttribute('data-index', idx);
+      row.innerHTML = `
+        <div>
+          <input aria-label="Faculty name" class="field font-semibold w-full" value="${t.name}" />
+        </div>
+        <div class="text-center">
+          <div class="stepper justify-center">
+            <button class="dec-stu" aria-label="Decrease students">−</button>
+            <input class="field stu-inp" aria-label="Students number" type="number" inputmode="numeric" min="0" max="999" value="${t.students}" />
+            <button class="inc-stu" aria-label="Increase students">+</button>
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="stepper justify-center">
+            <button class="dec-sat" aria-label="Decrease satisfaction">−</button>
+            <input class="field sat-inp" aria-label="Satisfaction score" type="number" inputmode="numeric" min="0" max="10" value="${t.sat}" />
+            <button class="inc-sat" aria-label="Increase satisfaction">+</button>
+          </div>
+        </div>
+        <div>
+          <div class="sat-bar" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${t.sat}">
+            <div class="h-full rounded-md bg-white/40" style="width:${(t.sat/10)*100}%"></div>
+          </div>
+        </div>
+        <div class="flex justify-center gap-2">
+          <button class="btn btn-ghost btn-dup" aria-label="Duplicate team">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 8h10v10H8z"/><path d="M6 6h10v10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-del" aria-label="Remove team">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m3 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M4 7h16" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+        </div>
+      `;
+      return row;
+    }
+
+    function render() {
+      teamsContainer.innerHTML = '';
+      if (viewMode === 'table') {
+        tableHeader.classList.remove('hidden');
+      } else {
+        tableHeader.classList.add('hidden');
+      }
+
+      teams.forEach((t, i) => {
+        const node = viewMode === 'table' ? createTeamRow(t, i) : createTeamCard(t, i);
+        teamsContainer.appendChild(node);
+      });
+
+      updateReputationUI();
+    }
+
+    // ---------- Event Delegation ----------
+    teamsContainer.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-index]');
+      if (!card) return;
+      const idx = parseInt(card.getAttribute('data-index'), 10);
+      const team = teams[idx];
+
+      if (e.target.closest('.inc-stu')) {
+        team.students = clamp(team.students + 1, 0, 999);
+        render();
+      }
+      if (e.target.closest('.dec-stu')) {
+        team.students = clamp(team.students - 1, 0, 999);
+        render();
+      }
+      if (e.target.closest('.inc-sat')) {
+        team.sat = clamp(team.sat + 1, 0, 10);
+        render();
+      }
+      if (e.target.closest('.dec-sat')) {
+        team.sat = clamp(team.sat - 1, 0, 10);
+        render();
+      }
+      if (e.target.closest('.btn-del')) {
+        const ok = confirm(`Remove team "${team.name}"?`);
+        if (ok) {
+          teams.splice(idx, 1);
+          render();
+        }
+      }
+      if (e.target.closest('.btn-dup')) {
+        teams.splice(idx + 1, 0, { name: team.name + ' Copy', students: team.students, sat: team.sat });
+        render();
+      }
+    });
+
+    teamsContainer.addEventListener('input', (e) => {
+      const card = e.target.closest('[data-index]');
+      if (!card) return;
+      const idx = parseInt(card.getAttribute('data-index'), 10);
+      const team = teams[idx];
+
+      if (e.target.matches('.stu-inp')) {
+        team.students = clamp(safeParseInt(e.target.value, team.students), 0, 999);
+        e.target.value = team.students;
+        updateReputationUI();
+      }
+      if (e.target.matches('.sat-inp')) {
+        team.sat = clamp(safeParseInt(e.target.value, team.sat), 0, 10);
+        e.target.value = team.sat;
+        // Update bar width in-place to avoid full re-render for smoother UX
+        const bar = card.querySelector('.sat-bar div');
+        if (bar) bar.style.width = (team.sat / 10 * 100) + '%';
+        const meter = card.querySelector('.sat-bar');
+        if (meter) meter.setAttribute('aria-valuenow', String(team.sat));
+        updateReputationUI();
+      }
+      if (e.target.matches('.field') && e.target.getAttribute('aria-label') === 'Faculty name') {
+        team.name = e.target.value;
+      }
+    });
+
+    // ---------- Controls ----------
+    const toggleViewBtn = $('#toggleViewBtn');
+    toggleViewBtn.addEventListener('click', () => {
+      viewMode = viewMode === 'cards' ? 'table' : 'cards';
+      toggleViewBtn.setAttribute('aria-pressed', viewMode === 'table');
+      render();
+    });
+
+    $('#addTeamBtn').addEventListener('click', () => {
+      teams.push({ name: `New Faculty ${teams.length + 1}`, students: 10, sat: 7 });
+      render();
+    });
+
+    $('#resetAllBtn').addEventListener('click', () => {
+      if (!confirm('Reset all teams to 10 Students and 7 Satisfaction?')) return;
+      teams = teams.map(t => ({ ...t, students: 10, sat: 7 }));
+      render();
+    });
+
+    $('#fillTenBtn').addEventListener('click', () => {
+      if (teams.length === 0) {
+        teams = DEFAULT_TEAMS.map(t => ({ ...t }));
+      } else {
+        // Ensure we have at least the default faculties present (non-destructive)
+        const existingNames = new Set(teams.map(t => t.name));
+        DEFAULT_TEAMS.forEach(t => {
+          if (!existingNames.has(t.name)) teams.push({ ...t });
+        });
+      }
+      render();
+    });
+
+    // Sorting
+    $('#sortByName').addEventListener('click', () => {
+      teams.sort((a, b) => a.name.localeCompare(b.name));
+      render();
+    });
+    $('#sortByStudents').addEventListener('click', () => {
+      teams.sort((a, b) => b.students - a.students || a.name.localeCompare(b.name));
+      render();
+    });
+    $('#sortBySat').addEventListener('click', () => {
+      teams.sort((a, b) => b.sat - a.sat || a.name.localeCompare(b.name));
+      render();
+    });
+
+    // Export / Import
+    $('#exportBtn').addEventListener('click', async () => {
+      const payload = JSON.stringify({ teams }, null, 2);
+      let done = false;
+      try {
+        if (navigator.clipboard && 'writeText' in navigator.clipboard) {
+          await navigator.clipboard.writeText(payload);
+          alert('State copied to clipboard.');
+          done = true;
+        }
+      } catch (e) { /* ignore */ }
+      if (!done) {
+        // Fallback: prompt
+        prompt('Copy the JSON below:', payload);
+      }
+    });
+
+    $('#importBtn').addEventListener('click', async () => {
+      const text = prompt('Paste the JSON you previously exported:');
+      if (!text) return;
+      try {
+        const obj = JSON.parse(text);
+        if (!obj || !Array.isArray(obj.teams)) throw new Error('Invalid JSON structure.');
+        // Basic validation
+        teams = obj.teams.map(t => ({
+          name: String(t.name || 'Faculty'),
+          students: clamp(safeParseInt(t.students, 10), 0, 999),
+          sat: clamp(safeParseInt(t.sat, 7), 0, 10)
+        }));
+        render();
+      } catch (e) {
+        alert('Import failed. Please check your JSON.');
+      }
+    });
+
+    // ---------- Init ----------
+    function init() {
+      teams = DEFAULT_TEAMS.map(t => ({ ...t }));
+      render();
+    }
+    init();
+
+  </script>
+
+
+</body></html>
